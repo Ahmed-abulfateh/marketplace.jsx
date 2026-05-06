@@ -3,7 +3,15 @@ import demoMarketplaceApi from './demoMarketplaceApi';
 const TOKEN_KEY = 'signal-market-token';
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'ahmed-abulfateh.github.io' ? 'https://marketplace-api.onrender.com' : '');
 let runtimeMode = API_BASE ? 'remote' : 'demo';
-const readToken = () => window.localStorage.getItem(TOKEN_KEY);
+const isJwtToken = (token) => typeof token === 'string' && token.split('.').length === 3;
+const readToken = () => {
+    const token = window.localStorage.getItem(TOKEN_KEY);
+    if (API_BASE && token && !isJwtToken(token)) {
+        window.localStorage.removeItem(TOKEN_KEY);
+        return null;
+    }
+    return token;
+};
 const writeToken = (token) => {
     if (token) {
         window.localStorage.setItem(TOKEN_KEY, token);

@@ -1,5 +1,5 @@
 const DEMO_STATE_KEY = 'signal-market-demo-state';
-const DEMO_TOKEN_KEY = 'signal-market-token';
+const DEMO_TOKEN_KEY = 'signal-market-demo-token';
 
 const DEMO_USERS = [
     {
