@@ -714,16 +714,15 @@ app.patch('/api/orders/:orderId/advance', authRequired(['seller', 'admin']), asy
   )
 
   if (mailTransport && order.email && nextStatus !== order.status) {
-    try {
-      await mailTransport.sendMail({
+    void mailTransport.sendMail({
         from: process.env.WORKSPACE_EMAIL || process.env.SMTP_USER,
         to: order.email,
         subject: `Signal Market order ${order.id} status updated`,
         text: `Your order ${order.id} is now ${nextStatus}.`,
       })
-    } catch (error) {
+      .catch((error) => {
       console.error('Order status email failed:', error)
-    }
+      })
   }
 
   res.json({ store: await buildStore(req.session) })

@@ -118,7 +118,9 @@ function SellerOrdersPage() {
         });
         setUpdatingOrderIds(selectedDeliverableOrderIds);
         try {
-            await Promise.all(selectedDeliverableOrderIds.map((orderId) => advanceOrderStatus(orderId, 'delivered')));
+            for (const orderId of selectedDeliverableOrderIds) {
+                await advanceOrderStatus(orderId, 'delivered');
+            }
             setSelectedOrderIds((current) => current.filter((id) => !selectedDeliverableOrderIds.includes(id)));
         }
         catch (error) {
@@ -140,7 +142,9 @@ function SellerOrdersPage() {
         setUpdateError(null);
         setUpdatingOrderIds(selectedPendingOrderIds);
         try {
-            await Promise.all(selectedPendingOrderIds.map((orderId) => advanceOrderStatus(orderId, 'pending')));
+            for (const orderId of selectedPendingOrderIds) {
+                await advanceOrderStatus(orderId, 'pending');
+            }
             setOptimisticDeliveredOrderIds((current) => (current.filter((id) => !selectedPendingOrderIds.includes(id))));
             setSelectedOrderIds((current) => current.filter((id) => !selectedPendingOrderIds.includes(id)));
         }
