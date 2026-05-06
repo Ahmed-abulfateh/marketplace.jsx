@@ -1,5 +1,5 @@
 const TOKEN_KEY = 'signal-market-token';
-const API_BASE = import.meta.env.VITE_API_URL ?? '';
+const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'ahmed-abulfateh.github.io' ? 'https://marketplace-api.onrender.com' : '');
 const readToken = () => window.localStorage.getItem(TOKEN_KEY);
 const writeToken = (token) => {
     if (token) {

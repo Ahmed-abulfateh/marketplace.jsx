@@ -6,4 +6,4 @@ import './index.css';
 import App from './App.jsx';
 import { LanguageProvider } from './context/LanguageContext.jsx';
 import { MarketplaceProvider } from './context/MarketplaceContext.jsx';
-createRoot(document.getElementById('root')).render(_jsx(StrictMode, { children: _jsx(LanguageProvider, { children: _jsx(MarketplaceProvider, { children: _jsx(BrowserRouter, { basename: "/marketplace.tsx", children: _jsx(App, {}) }) }) }) }));
+createRoot(document.getElementById('root')).render(_jsx(StrictMode, { children: _jsx(LanguageProvider, { children: _jsx(MarketplaceProvider, { children: _jsx(BrowserRouter, { basename: "/marketplace.jsx", children: _jsx(App, {}) }) }) }) }));

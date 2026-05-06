@@ -79,7 +79,7 @@ After your backend is deployed:
 
 ### Step 6: Test
 
-1. Go to: `https://ahmed-abulfateh.github.io/marketplace.tsx/`
+1. Go to: `https://ahmed-abulfateh.github.io/marketplace.jsx/`
 2. Try signing in with the admin account:
    - Email: `admin@test.com`
    - Password: `TestPass123!`
@@ -122,4 +122,4 @@ Make sure your Render service is fully deployed and the URL is correct
 2. Check browser Network tab (F12 → Network) to see API requests
 3. Verify MongoDB connection is working with `/api/health` endpoint
 
-Visit your deployment page: `https://ahmed-abulfateh.github.io/marketplace.tsx/deployment`
+Visit your deployment page: `https://ahmed-abulfateh.github.io/marketplace.jsx/deployment`
