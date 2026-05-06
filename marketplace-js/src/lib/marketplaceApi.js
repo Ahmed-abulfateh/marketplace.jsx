@@ -1,5 +1,7 @@
+import demoMarketplaceApi from './demoMarketplaceApi';
 const TOKEN_KEY = 'signal-market-token';
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'ahmed-abulfateh.github.io' ? 'https://marketplace-api.onrender.com' : '');
+let runtimeMode = API_BASE ? 'remote' : 'demo';
 const readToken = () => window.localStorage.getItem(TOKEN_KEY);
 const writeToken = (token) => {
     if (token) {
@@ -8,6 +10,32 @@ const writeToken = (token) => {
     }
     window.localStorage.removeItem(TOKEN_KEY);
 };
+const shouldUseDemoFallback = (error) => {
+    if (!API_BASE) {
+        return true;
+    }
+    const message = error instanceof Error ? error.message : String(error ?? '');
+    return /Could not reach|Request failed: 404|Request failed: 5\d\d|Failed to fetch|Load failed/i.test(message);
+};
+const runWithFallback = async (remoteOperation, demoOperation) => {
+    if (!API_BASE || runtimeMode === 'demo') {
+        runtimeMode = 'demo';
+        return demoOperation();
+    }
+    try {
+        const result = await remoteOperation();
+        runtimeMode = 'remote';
+        return result;
+    }
+    catch (error) {
+        if (shouldUseDemoFallback(error)) {
+            runtimeMode = 'demo';
+            return demoOperation();
+        }
+        throw error;
+    }
+};
+const getMarketplaceRuntimeInfo = () => ({ mode: runtimeMode, apiBase: API_BASE });
 const request = async (path, init) => {
     const token = readToken();
     let response;
@@ -40,117 +68,124 @@ const request = async (path, init) => {
     return response.json();
 };
 const marketplaceApi = {
-    getStore: async () => {
+    getStore: async () => runWithFallback(async () => {
         const response = await request('/api/bootstrap');
         return response.store;
-    },
-    signIn: async (payload) => {
+    }, () => demoMarketplaceApi.getStore()),
+    signIn: async (payload) => runWithFallback(async () => {
         const response = await request('/api/auth/sign-in', {
             method: 'POST',
             body: JSON.stringify(payload),
         });
         writeToken(response.token);
         return response.store;
-    },
-    signUp: async (payload) => {
+    }, async () => {
+        const response = await demoMarketplaceApi.signIn(payload);
+        return response.store;
+    }),
+    signUp: async (payload) => runWithFallback(async () => {
         const response = await request('/api/auth/sign-up', {
             method: 'POST',
             body: JSON.stringify(payload),
         });
         writeToken(response.token);
         return response.store;
-    },
-    signOut: async () => {
+    }, async () => {
+        const response = await demoMarketplaceApi.signUp(payload);
+        return response.store;
+    }),
+    signOut: async () => runWithFallback(async () => {
         writeToken(null);
         const response = await request('/api/bootstrap');
         return response.store;
-    },
-    updateProfile: async (payload) => {
+    }, () => demoMarketplaceApi.signOut()),
+    updateProfile: async (payload) => runWithFallback(async () => {
         const response = await request('/api/profile', {
             method: 'PATCH',
             body: JSON.stringify(payload),
         });
         return response.store;
-    },
-    toggleFavorite: async (listingId) => {
+    }, () => demoMarketplaceApi.updateProfile(payload)),
+    toggleFavorite: async (listingId) => runWithFallback(async () => {
         const response = await request(`/api/favorites/${listingId}/toggle`, {
             method: 'POST',
         });
         return response.store;
-    },
-    toggleCart: async (listingId) => {
+    }, () => demoMarketplaceApi.toggleFavorite(listingId)),
+    toggleCart: async (listingId) => runWithFallback(async () => {
         const response = await request(`/api/cart/${listingId}/toggle`, {
             method: 'POST',
         });
         return response.store;
-    },
-    createListing: async (payload) => {
+    }, () => demoMarketplaceApi.toggleCart(listingId)),
+    createListing: async (payload) => runWithFallback(async () => {
         const response = await request('/api/listings', {
             method: 'POST',
             body: JSON.stringify(payload),
         });
         return response.store;
-    },
-    updateListing: async (listingId, payload) => {
+    }, () => demoMarketplaceApi.createListing(payload)),
+    updateListing: async (listingId, payload) => runWithFallback(async () => {
         const response = await request(`/api/listings/${listingId}`, {
             method: 'PATCH',
             body: JSON.stringify(payload),
         });
         return response.store;
-    },
-    deleteListing: async (listingId) => {
+    }, () => demoMarketplaceApi.updateListing(listingId, payload)),
+    deleteListing: async (listingId) => runWithFallback(async () => {
         const response = await request(`/api/listings/${listingId}`, {
             method: 'DELETE',
         });
         return response.store;
-    },
-    updateListingStatus: async (listingId, status) => {
+    }, () => demoMarketplaceApi.deleteListing(listingId)),
+    updateListingStatus: async (listingId, status) => runWithFallback(async () => {
         const response = await request(`/api/listings/${listingId}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
         });
         return response.store;
-    },
-    addModerationNote: async (listingId, note) => {
+    }, () => demoMarketplaceApi.updateListingStatus(listingId, status)),
+    addModerationNote: async (listingId, note) => runWithFallback(async () => {
         const response = await request(`/api/listings/${listingId}/notes`, {
             method: 'POST',
             body: JSON.stringify({ note }),
         });
         return response.store;
-    },
-    advanceOrderStatus: async (orderId, status) => {
+    }, () => demoMarketplaceApi.addModerationNote(listingId, note)),
+    advanceOrderStatus: async (orderId, status) => runWithFallback(async () => {
         const response = await request(`/api/orders/${orderId}/advance`, {
             method: 'PATCH',
             body: JSON.stringify(status ? { status } : {}),
         });
         return response.store;
-    },
-    sendOrderMessage: async (orderId, text) => {
+    }, () => demoMarketplaceApi.advanceOrderStatus(orderId, status)),
+    sendOrderMessage: async (orderId, text) => runWithFallback(async () => {
         const response = await request(`/api/orders/${orderId}/messages`, {
             method: 'POST',
             body: JSON.stringify({ text }),
         });
         return response.store;
-    },
-    addListingReview: async (listingId, payload) => {
+    }, () => demoMarketplaceApi.sendOrderMessage(orderId, text)),
+    addListingReview: async (listingId, payload) => runWithFallback(async () => {
         const response = await request(`/api/listings/${listingId}/reviews`, {
             method: 'POST',
             body: JSON.stringify(payload),
         });
         return response.store;
-    },
-    updateSellerStatus: async (userId, status) => {
+    }, () => demoMarketplaceApi.addListingReview(listingId, payload)),
+    updateSellerStatus: async (userId, status) => runWithFallback(async () => {
         const response = await request(`/api/admin/sellers/${userId}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
         });
         return response.store;
-    },
-    checkout: async (payload) => request('/api/checkout', { method: 'POST', body: JSON.stringify(payload) }),
-    requestPasswordReset: async () => request('/api/auth/request-password-reset', { method: 'POST' }),
-    resetPassword: async (token, newPassword) => request('/api/auth/reset-password', {
+    }, () => demoMarketplaceApi.updateSellerStatus(userId, status)),
+    checkout: async (payload) => runWithFallback(() => request('/api/checkout', { method: 'POST', body: JSON.stringify(payload) }), () => demoMarketplaceApi.checkout(payload)),
+    requestPasswordReset: async () => runWithFallback(() => request('/api/auth/request-password-reset', { method: 'POST' }), () => demoMarketplaceApi.requestPasswordReset()),
+    resetPassword: async (token, newPassword) => runWithFallback(() => request('/api/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({ token, newPassword }),
-    }),
+    }), () => demoMarketplaceApi.resetPassword(token, newPassword)),
 };
+export { getMarketplaceRuntimeInfo };
 export default marketplaceApi;

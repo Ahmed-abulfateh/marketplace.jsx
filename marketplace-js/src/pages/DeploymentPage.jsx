@@ -1,48 +1,63 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from 'react';
+import { getMarketplaceRuntimeInfo } from '../lib/marketplaceApi';
 function DeploymentPage() {
     const [deploymentStatus, setDeploymentStatus] = useState({
         status: 'connecting',
         message: 'Checking deployment status...',
         mongoDBStatus: 'Checking...',
         apiHealth: 'Checking...',
+        apiEndpoint: getMarketplaceRuntimeInfo().apiBase || 'Local demo mode',
         timestamp: new Date().toLocaleString(),
     });
     useEffect(() => {
         let isMounted = true;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-        const checkDeploymentStatus = async () => {
-            const API_BASE = import.meta.env.VITE_API_URL ?? '';
-            if (!API_BASE) {
-                if (isMounted) {
-                    setDeploymentStatus({
-                        status: 'error',
-                        message: 'No backend URL configured (VITE_API_URL is not set)',
-                        mongoDBStatus: 'Unknown',
-                        apiHealth: 'Not configured',
-                        timestamp: new Date().toLocaleString(),
-                    });
-                }
+        const { apiBase } = getMarketplaceRuntimeInfo();
+        const onPagesHost = window.location.hostname === 'ahmed-abulfateh.github.io';
+        const markDemoMode = () => {
+            if (!isMounted) {
                 return;
             }
+            setDeploymentStatus({
+                status: 'connected',
+                message: 'Running in demo mode with local marketplace data.',
+                mongoDBStatus: 'Not required in demo mode',
+                apiHealth: 'Local demo adapter',
+                apiEndpoint: apiBase || 'Local demo mode',
+                timestamp: new Date().toLocaleString(),
+            });
+        };
+        if (!apiBase) {
+            markDemoMode();
+            return () => {
+                isMounted = false;
+            };
+        }
+        const checkDeploymentStatus = async () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
             try {
-                const healthResponse = await fetch(`${API_BASE}/api/health`, {
+                const healthResponse = await fetch(`${apiBase}/api/health`, {
                     signal: controller.signal,
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 });
-                if (!isMounted)
+                if (!isMounted) {
                     return;
+                }
                 if (healthResponse.ok) {
                     setDeploymentStatus({
                         status: 'connected',
                         message: 'Deployment is operational',
                         mongoDBStatus: 'Connected',
                         apiHealth: 'Healthy',
+                        apiEndpoint: apiBase,
                         timestamp: new Date().toLocaleString(),
                     });
+                }
+                else if (onPagesHost) {
+                    markDemoMode();
                 }
                 else {
                     setDeploymentStatus({
@@ -50,35 +65,43 @@ function DeploymentPage() {
                         message: `API responded with status ${healthResponse.status}`,
                         mongoDBStatus: 'Unknown',
                         apiHealth: 'Unhealthy',
+                        apiEndpoint: apiBase,
                         timestamp: new Date().toLocaleString(),
                     });
                 }
             }
             catch (error) {
-                if (!isMounted)
+                if (!isMounted) {
                     return;
-                const errorMsg = error instanceof Error
-                    ? error.name === 'AbortError'
-                        ? 'Request timed out'
-                        : error.message
-                    : 'Unknown error';
-                setDeploymentStatus({
-                    status: 'error',
-                    message: `Failed to connect to API: ${errorMsg}`,
-                    mongoDBStatus: 'Unknown',
-                    apiHealth: 'Unreachable',
-                    timestamp: new Date().toLocaleString(),
-                });
+                }
+                if (onPagesHost) {
+                    markDemoMode();
+                }
+                else {
+                    const errorMsg = error instanceof Error
+                        ? error.name === 'AbortError'
+                            ? 'Request timed out'
+                            : error.message
+                        : 'Unknown error';
+                    setDeploymentStatus({
+                        status: 'error',
+                        message: `Failed to connect to API: ${errorMsg}`,
+                        mongoDBStatus: 'Unknown',
+                        apiHealth: 'Unreachable',
+                        apiEndpoint: apiBase,
+                        timestamp: new Date().toLocaleString(),
+                    });
+                }
             }
             clearTimeout(timeoutId);
         };
-        checkDeploymentStatus();
-        const interval = setInterval(checkDeploymentStatus, 10000); // Check every 10 seconds
+        void checkDeploymentStatus();
+        const interval = setInterval(() => {
+            void checkDeploymentStatus();
+        }, 10000);
         return () => {
             isMounted = false;
             clearInterval(interval);
-            clearTimeout(timeoutId);
-            controller.abort();
         };
     }, []);
     return (_jsxs("main", { style: { padding: '2rem', maxWidth: '800px', margin: '0 auto' }, children: [_jsx("h1", { children: "Deployment Status" }), _jsxs("section", { style: {
@@ -109,6 +132,6 @@ function DeploymentPage() {
                                             padding: '0.5rem 0',
                                             color: deploymentStatus.apiHealth === 'Healthy' ? '#28a745' : '#dc3545',
                                             fontWeight: '500',
-                                        }, children: deploymentStatus.apiHealth })] })] })] }), _jsxs("section", { style: { marginTop: '2rem' }, children: [_jsx("h2", { style: { fontSize: '1.3rem', marginBottom: '1rem' }, children: "Configuration" }), _jsxs("div", { style: { padding: '1rem', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#f9f9f9' }, children: [_jsxs("p", { style: { margin: '0.5rem 0', fontSize: '0.95rem' }, children: [_jsx("strong", { children: "API Endpoint:" }), " ", _jsx("code", { children: "/api" })] }), _jsxs("p", { style: { margin: '0.5rem 0', fontSize: '0.95rem' }, children: [_jsx("strong", { children: "Database:" }), " MongoDB Atlas (MarketPlace)"] }), _jsxs("p", { style: { margin: '0.5rem 0', fontSize: '0.95rem' }, children: [_jsx("strong", { children: "Status Page URL:" }), " ", _jsx("code", { children: "/deployment" })] })] })] })] }));
+                                        }, children: deploymentStatus.apiHealth })] })] })] }), _jsxs("section", { style: { marginTop: '2rem' }, children: [_jsx("h2", { style: { fontSize: '1.3rem', marginBottom: '1rem' }, children: "Configuration" }), _jsxs("div", { style: { padding: '1rem', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#f9f9f9' }, children: [_jsxs("p", { style: { margin: '0.5rem 0', fontSize: '0.95rem' }, children: [_jsx("strong", { children: "API Endpoint:" }), " ", _jsx("code", { children: deploymentStatus.apiEndpoint })] }), _jsxs("p", { style: { margin: '0.5rem 0', fontSize: '0.95rem' }, children: [_jsx("strong", { children: "Database:" }), " MongoDB Atlas when remote mode is available"] }), _jsxs("p", { style: { margin: '0.5rem 0', fontSize: '0.95rem' }, children: [_jsx("strong", { children: "Status Page URL:" }), " ", _jsx("code", { children: "/deployment" })] })] })] })] }));
 }
 export default DeploymentPage;
