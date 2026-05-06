@@ -1,4 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { getMarketplaceRuntimeInfo } from '../lib/marketplaceApi';
 function DeploymentPage() {
@@ -34,19 +35,18 @@ function DeploymentPage() {
             };
         }
         const checkDeploymentStatus = async () => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
             try {
-                const healthResponse = await fetch(`${apiBase}/api/health`, {
-                    signal: controller.signal,
+                const healthResponse = await axios.get(`${apiBase}/api/health`, {
+                    timeout: 5000,
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    validateStatus: () => true,
                 });
                 if (!isMounted) {
                     return;
                 }
-                if (healthResponse.ok) {
+                if (healthResponse.status >= 200 && healthResponse.status < 300) {
                     setDeploymentStatus({
                         status: 'connected',
                         message: 'Deployment is operational',
@@ -78,11 +78,13 @@ function DeploymentPage() {
                     markDemoMode();
                 }
                 else {
-                    const errorMsg = error instanceof Error
-                        ? error.name === 'AbortError'
+                    const errorMsg = axios.isAxiosError(error)
+                        ? error.code === 'ECONNABORTED'
                             ? 'Request timed out'
                             : error.message
-                        : 'Unknown error';
+                        : error instanceof Error
+                            ? error.message
+                            : 'Unknown error';
                     setDeploymentStatus({
                         status: 'error',
                         message: `Failed to connect to API: ${errorMsg}`,
@@ -93,7 +95,6 @@ function DeploymentPage() {
                     });
                 }
             }
-            clearTimeout(timeoutId);
         };
         void checkDeploymentStatus();
         const interval = setInterval(() => {

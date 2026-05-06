@@ -1,3 +1,4 @@
+import axios from 'axios';
 import demoMarketplaceApi from './demoMarketplaceApi';
 const TOKEN_KEY = 'signal-market-token';
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'ahmed-abulfateh.github.io' ? 'https://marketplace-api.onrender.com' : '');
@@ -15,7 +16,7 @@ const shouldUseDemoFallback = (error) => {
         return true;
     }
     const message = error instanceof Error ? error.message : String(error ?? '');
-    return /Could not reach|Request failed: 404|Request failed: 5\d\d|Failed to fetch|Load failed/i.test(message);
+    return /Could not reach|Request failed: 404|Request failed: 5\d\d|Failed to fetch|Load failed|Network Error|timeout/i.test(message);
 };
 const runWithFallback = async (remoteOperation, demoOperation) => {
     if (!API_BASE || runtimeMode === 'demo') {
@@ -36,36 +37,47 @@ const runWithFallback = async (remoteOperation, demoOperation) => {
     }
 };
 const getMarketplaceRuntimeInfo = () => ({ mode: runtimeMode, apiBase: API_BASE });
-const request = async (path, init) => {
+const apiClient = axios.create({
+    baseURL: API_BASE,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+apiClient.interceptors.request.use((config) => {
     const token = readToken();
-    let response;
+    const headers = config.headers ?? {};
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+    else {
+        delete headers.Authorization;
+    }
+    config.headers = headers;
+    return config;
+});
+const request = async (path, init) => {
     try {
-        response = await fetch(`${API_BASE}${path}`, {
-            ...init,
-            headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                ...(init?.headers ?? {}),
-            },
+        const response = await apiClient({
+            url: path,
+            method: init?.method,
+            data: init?.body,
+            headers: init?.headers,
         });
+        return response.data;
     }
-    catch {
-        throw new Error('Could not reach the marketplace server. Check that the backend is running and try again.');
-    }
-    if (!response.ok) {
-        let message = `Request failed: ${response.status}`;
-        try {
-            const errorBody = await response.json();
-            if (typeof errorBody?.message === 'string') {
-                message = errorBody.message;
+    catch (error) {
+        if (axios.isAxiosError(error)) {
+            if (error.response) {
+                const errorBody = error.response.data;
+                if (typeof errorBody?.message === 'string') {
+                    throw new Error(errorBody.message);
+                }
+                throw new Error(`Request failed: ${error.response.status}`);
             }
+            throw new Error('Could not reach the marketplace server. Check that the backend is running and try again.');
         }
-        catch {
-            // Keep the fallback message when the response has no JSON body.
-        }
-        throw new Error(message);
+        throw error;
     }
-    return response.json();
 };
 const marketplaceApi = {
     getStore: async () => runWithFallback(async () => {
