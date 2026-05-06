@@ -400,11 +400,11 @@ app.post('/api/auth/sign-in', async (req, res) => {
   const password = String(req.body?.password ?? '')
 
   if (!identifier || !password) {
-    return res.status(400).json({ message: 'Email or phone and password are required.' })
+    return res.status(400).json({ message: 'Username, email, or phone and password are required.' })
   }
 
   const user = await User.findOne({
-    $or: [{ email: identifier }, { phone: identifier }],
+    $or: [{ username: identifier }, { email: identifier }, { phone: identifier }],
   }).lean()
 
   if (!user || !verifyPassword(password, user.passwordHash)) {

@@ -3,11 +3,33 @@ import { createContext, useContext, useEffect, useState, } from 'react';
 import { formatCurrency } from '../data';
 import marketplaceApi from '../lib/marketplaceApi';
 const MarketplaceContext = createContext(undefined);
+const EMPTY_STORE = {
+    session: null,
+    listings: [],
+    favoriteIds: [],
+    cartIds: [],
+    orders: [],
+    pendingSellers: [],
+};
 function MarketplaceProvider({ children }) {
     const [store, setStore] = useState(null);
     const [lastCheckout, setLastCheckout] = useState(null);
     useEffect(() => {
-        void marketplaceApi.getStore().then(setStore);
+        let isMounted = true;
+        void marketplaceApi.getStore()
+            .then((nextStore) => {
+            if (isMounted) {
+                setStore(nextStore);
+            }
+        })
+            .catch(() => {
+            if (isMounted) {
+                setStore(EMPTY_STORE);
+            }
+        });
+        return () => {
+            isMounted = false;
+        };
     }, []);
     const listings = store?.listings ?? [];
     const favoriteIds = store?.favoriteIds ?? [];

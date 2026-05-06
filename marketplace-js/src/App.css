@@ -1216,6 +1216,37 @@ html[dir='rtl'] .auth-header {
   border-bottom: none;
 }
 
+.orders-table-selection-cell {
+  width: 4rem;
+  text-align: center !important;
+}
+
+.orders-table-selection-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.orders-table-checkbox {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.orders-table-checkbox:disabled,
+.orders-table-selection-control:has(.orders-table-checkbox:disabled) {
+  cursor: not-allowed;
+}
+
 .table-row-actions {
   display: flex;
   align-items: center;
