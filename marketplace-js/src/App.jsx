@@ -1,4 +1,3 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import AdminLayout from './components/AdminLayout';
@@ -25,7 +24,46 @@ import SellerProductsPage from './pages/SellerProductsPage.jsx';
 import SellerPage from './pages/SellerPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+
 function App() {
-    return (_jsxs(Routes, { children: [_jsx(Route, { path: "sign-in", element: _jsx(SignInPage, {}) }), _jsx(Route, { path: "sign-up", element: _jsx(SignUpPage, {}) }), _jsx(Route, { path: "deployment", element: _jsx(DeploymentPage, {}) }), _jsx(Route, { path: "reset-password", element: _jsx(ResetPasswordPage, {}) }), _jsxs(Route, { element: _jsx(MarketplaceLayout, {}), children: [_jsx(Route, { index: true, element: _jsx(HomePage, {}) }), _jsx(Route, { path: "browse", element: _jsx(BrowsePage, {}) }), _jsx(Route, { path: "browse/:listingId", element: _jsx(ProductPage, {}) }), _jsxs(Route, { element: _jsx(ProtectedRoute, { roles: ['buyer', 'seller', 'admin'] }), children: [_jsx(Route, { path: "profile", element: _jsx(ProfilePage, {}) }), _jsx(Route, { path: "checkout", element: _jsx(CheckoutPage, {}) }), _jsx(Route, { path: "checkout/:listingId", element: _jsx(CheckoutPage, {}) }), _jsx(Route, { path: "checkout/success", element: _jsx(CheckoutSuccessPage, {}) }), _jsx(Route, { path: "shipments", element: _jsx(ShipmentsPage, {}) })] }), _jsx(Route, { element: _jsx(ProtectedRoute, { roles: ['seller'] }), children: _jsxs(Route, { path: "seller", element: _jsx(SellerLayout, {}), children: [_jsx(Route, { index: true, element: _jsx(SellerPage, {}) }), _jsx(Route, { path: "products", element: _jsx(SellerProductsPage, {}) }), _jsx(Route, { path: "orders", element: _jsx(SellerOrdersPage, {}) }), _jsx(Route, { path: "orders/:orderId", element: _jsx(SellerOrderDetailPage, {}) })] }) }), _jsx(Route, { element: _jsx(ProtectedRoute, { roles: ['admin'] }), children: _jsxs(Route, { path: "admin", element: _jsx(AdminLayout, {}), children: [_jsx(Route, { index: true, element: _jsx(AdminPage, {}) }), _jsx(Route, { path: "consumers", element: _jsx(AdminConsumersPage, {}) }), _jsx(Route, { path: "moderation", element: _jsx(AdminModerationPage, {}) }), _jsx(Route, { path: "moderation/:listingId", element: _jsx(AdminModerationDetailPage, {}) }), _jsx(Route, { path: "sellers", element: _jsx(AdminSellersPage, {}) })] }) }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] })] }));
+  return (
+    <Routes>
+      <Route path="sign-in" element={<SignInPage />} />
+      <Route path="sign-up" element={<SignUpPage />} />
+      <Route path="deployment" element={<DeploymentPage />} />
+      <Route path="reset-password" element={<ResetPasswordPage />} />
+      <Route element={<MarketplaceLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="browse" element={<BrowsePage />} />
+        <Route path="browse/:listingId" element={<ProductPage />} />
+        <Route element={<ProtectedRoute roles={['buyer', 'seller', 'admin']} />}>
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="checkout/:listingId" element={<CheckoutPage />} />
+          <Route path="checkout/success" element={<CheckoutSuccessPage />} />
+          <Route path="shipments" element={<ShipmentsPage />} />
+        </Route>
+        <Route element={<ProtectedRoute roles={['seller']} />}>
+          <Route path="seller" element={<SellerLayout />}>
+            <Route index element={<SellerPage />} />
+            <Route path="products" element={<SellerProductsPage />} />
+            <Route path="orders" element={<SellerOrdersPage />} />
+            <Route path="orders/:orderId" element={<SellerOrderDetailPage />} />
+          </Route>
+        </Route>
+        <Route element={<ProtectedRoute roles={['admin']} />}>
+          <Route path="admin" element={<AdminLayout />}>
+            <Route index element={<AdminPage />} />
+            <Route path="consumers" element={<AdminConsumersPage />} />
+            <Route path="moderation" element={<AdminModerationPage />} />
+            <Route path="moderation/:listingId" element={<AdminModerationDetailPage />} />
+            <Route path="sellers" element={<AdminSellersPage />} />
+          </Route>
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  );
 }
+
 export default App;
