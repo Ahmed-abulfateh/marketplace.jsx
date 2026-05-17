@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import logoSrc from '../assets/logo.png';
+import BrandLogo from '../components/BrandLogo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import { useMarketplace } from '../context/MarketplaceContext';
@@ -41,7 +41,7 @@ function SignInPage() {
     <main className="auth-shell">
       <section className="auth-panel auth-panel-narrow">
         <div className="auth-logo-lockup">
-          <img src={logoSrc} alt={copy.layout.brand} className="auth-logo-img" />
+          <BrandLogo alt={copy.layout.brand} className="auth-logo-img" />
           <span className="auth-brand-name">{copy.layout.brand}</span>
           <div style={{ marginInlineStart: 'auto' }}><LanguageSwitcher /></div>
         </div>

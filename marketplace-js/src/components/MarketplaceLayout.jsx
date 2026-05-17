@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import logoSrc from '../assets/logo.png';
+import BrandLogo from './BrandLogo';
 import { useLanguage } from '../context/LanguageContext';
 import { useMarketplace } from '../context/MarketplaceContext';
 
@@ -80,7 +80,7 @@ function MarketplaceLayout() {
       <header className="site-header">
         <div className="header-top">
           <Link to="/" className="header-logo-link">
-            <img src={logoSrc} alt={copy.layout.brand} className="header-logo" />
+            <BrandLogo alt={copy.layout.brand} className="header-logo" />
           </Link>
 
           <form className="header-search-form" onSubmit={handleSearch} role="search">
@@ -185,7 +185,7 @@ function MarketplaceLayout() {
 
       <footer className="site-footer">
         <div className="footer-brand">
-          <img src={logoSrc} alt={copy.layout.brand} className="footer-logo" style={{ height: '40px', width: 'auto', filter: 'brightness(0) invert(1)' }} />
+          <BrandLogo alt={copy.layout.brand} className="footer-logo" style={{ height: '40px', width: 'auto', filter: 'brightness(0) invert(1)' }} />
           <p className="footer-brand-tagline">{copy.layout.tagline}</p>
           <div className="footer-badges">
             {copy.layout.footerBadges.map((badge) => (
